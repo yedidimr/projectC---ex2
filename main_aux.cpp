@@ -54,6 +54,7 @@ int* nearestImages (double* arr, int size, int nearestNImages){
 
 	if ((arr_with_indixes = (double**)malloc(size*sizeof(double*))) == NULL) {
 		printf("An error occurred - allocation failure\n");
+		free(first_minimums);
 		fflush(NULL);
 		return NULL;
 	}
@@ -61,6 +62,8 @@ int* nearestImages (double* arr, int size, int nearestNImages){
 	for (i = 0; i < size; i++){
 		if ((arr_with_indixes[i] = (double *)malloc(2*sizeof(double))) == NULL ) {
 			printf("An error occurred - allocation failure\n");
+			free(first_minimums);
+			free(arr_with_indixes);
 			fflush(NULL);
 			return NULL;
 		}
@@ -80,6 +83,7 @@ int* nearestImages (double* arr, int size, int nearestNImages){
 		first_minimums[i] = (int)arr_with_indixes[i][1];
 	}
 
+	free(arr_with_indixes);
 	return first_minimums;
 }
 

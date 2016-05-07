@@ -13,7 +13,9 @@ int main()
 	char dir[10] = "./images/";
 	char prefix[4] = "img";
         char suffix[5] =".png";
-        char query[11]="queryA.png";
+        char queries[5][11]={"queryA.png","queryB.png","queryC.png","queryD.png", "#"};
+        char *query;//[11];
+int k;
 int number_of_images = 17;
 int number_of_bins = 16;
 int max_number_of_features = 100;
@@ -42,7 +44,6 @@ int max_number_of_features = 100;
 		return 1;
 	}
 
-	printf("(%s)\n", dir);
 	fflush(NULL);
 	printf("Enter images prefix:\n");
 	fflush(NULL);
@@ -98,6 +99,7 @@ int max_number_of_features = 100;
 		fflush(NULL);
 		return 1; 
 	}
+
 	if ((SIFT_descriptors_per_image = (double***)malloc(number_of_images*sizeof(double**))) == NULL) {
 		free(RGB_hist_per_image);
 		printf(ALLOCATION_FAILURE_MSG);
@@ -116,6 +118,8 @@ int max_number_of_features = 100;
 	if ((nFeaturesPerImage = (int*)malloc(number_of_images*sizeof(int))) == NULL) {
 		printf(ALLOCATION_FAILURE_MSG);
 		fflush(NULL);
+		free(RGB_hist_per_image);
+		free(SIFT_descriptors_per_image);
 		return 1;
 	}
 
@@ -124,7 +128,11 @@ int max_number_of_features = 100;
 		nFeaturesPerImage[i] = sizeof SIFT_descriptors_per_image[i] / sizeof SIFT_descriptors_per_image[i][0];
 	}
 
-	while (1){
+	// while (1){
+	for(k=0;k<5;k++){
+		// TODO remove this after debugging
+		
+		query = queries[k];
 		/*
 		printf("Enter a query image or # to terminate:\n");
 		fflush(NULL);
@@ -132,25 +140,31 @@ int max_number_of_features = 100;
 		if (scanf("%s",query) == 0){
 			free(RGB_hist_per_image);
 			free(SIFT_descriptors_per_image);
+			free(nFeaturesPerImage);
 			return 1;
 		}
+		*/
 		// the user requested termination
 		if (strcmp (query,"#") == 0) {
 			printf(EXIT_MSG);
 			fflush(NULL);
 			free(RGB_hist_per_image);
 			free(SIFT_descriptors_per_image);
+			free(nFeaturesPerImage);
 			return 1;
 		}
-*/
+
+
+
 		//calculate the RGB histogram and sift descriptors of the query image
 		RGB_hist_of_query = spGetRGBHist(query, number_of_bins);
 		sift_descriptors_of_query = spGetSiftDescriptors(query, max_number_of_features, &actual_num_of_features);
 
 		// count the number of features of query image
-		nFeaturesOfQuery = sizeof sift_descriptors_of_query / sizeof sift_descriptors_of_query[0];
+		nFeaturesOfQuery = sizeof sift_descriptors_of_query / sizeof sift_descriptors_of_query[0]; // TODO ??? sizeof() and not sizeof . we know the size.
 
 		//allocate memory for arr_of_RGB_distances
+
 		arr_of_RGB_distances = (double*)malloc(number_of_images*sizeof(double));
 		if (arr_of_RGB_distances == NULL) {
 			printf(ALLOCATION_FAILURE_MSG);
@@ -159,6 +173,7 @@ int max_number_of_features = 100;
 			free(SIFT_descriptors_per_image);
 			free(RGB_hist_of_query);
 			free(sift_descriptors_of_query);
+			free(nFeaturesPerImage);
 			return 1;
 		}
 
@@ -172,56 +187,54 @@ int max_number_of_features = 100;
 		printf("Nearest images using global descriptors:\n");
 		printf("%d, %d, %d, %d, %d\n", nearest_images_global[0],nearest_images_global[1],nearest_images_global[2],nearest_images_global[3],nearest_images_global[4]);
 		fflush(NULL);
-
-		// free memory of nearest global that is no longer needed
-		free(RGB_hist_of_query);
-		free(arr_of_RGB_distances);
-		free(nearest_images_global);
-
+		
 		// allocate memory for mach_feature_cnt and set all cells to zero because were using this array as a counter array
 		mach_feature_cnt = (double*)calloc(number_of_images, sizeof(double)); //TODO should allocate BEST_N_FEATURES *max_number_of_features and not number_of_images
 		if (mach_feature_cnt==NULL){
-			printf("An 6666error occurred - allocation failure\n"); //TODO: switch to ALLOCATION_FAILURE_MSG
+			printf("An error occurred - allocation failure\n"); //TODO: switch to ALLOCATION_FAILURE_MSG
 			fflush(NULL);
 			free(RGB_hist_per_image);
 			free(SIFT_descriptors_per_image);
 			free(RGB_hist_of_query);
 			free(sift_descriptors_of_query);
 			free(arr_of_RGB_distances);
-			free(nearest_images_global);
+			free(nearest_images_global); 
+			free(nFeaturesPerImage);
 			return 1;
 		}
 
 		// for each feature of query calculate the spBestSIFTL2SquaredDistance
 		for (i=0; i<nFeaturesOfQuery; i++){
-printf("reut1 \n");
 			feature_square_distance_result = spBestSIFTL2SquaredDistance(best_n_features, sift_descriptors_of_query[i],
 				SIFT_descriptors_per_image, number_of_images, nFeaturesPerImage);
 			//add the results from spBestSIFTL2SquaredDistance to the (minus) counting array
 			for (j=0; j<best_n_features; j++){
-				printf("%d",j);
 				fflush(NULL);
 				mach_feature_cnt[feature_square_distance_result[j]]--; 
 			}
 		}
-printf("reut2\n");
+
 		// find the nearest images using local and report to user
 		nearest_images_local = nearestImages(mach_feature_cnt, number_of_images, best_n_features);
 		printf("Nearest images using local descriptors:\n");
 		printf("%d, %d, %d, %d, %d\n", nearest_images_local[0],nearest_images_local[1], nearest_images_local[2],nearest_images_local[3], nearest_images_local[4]);
 		fflush(NULL);
 
-		// free memory allocated inside while loop (that wasn't already freed)
+		// free memory allocated inside while loop
 		free(sift_descriptors_of_query);
 		free(feature_square_distance_result);
 		free(mach_feature_cnt);
-		free(nFeaturesPerImage);
-	
+		free(RGB_hist_of_query);
+		free(arr_of_RGB_distances);
+		free(nearest_images_global);
+		free(nearest_images_local);
+
 	}
 
 	// free memory allocated outside while loop
 	free(RGB_hist_per_image);
 	free(SIFT_descriptors_per_image);
+	free(nFeaturesPerImage);
 	return 0;
 
 }

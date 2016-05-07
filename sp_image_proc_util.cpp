@@ -62,6 +62,7 @@ int** spGetRGBHist(char* str, int nBins){
 		if (histMat[i] == NULL) {
 			printf(ALLOCATION_FAILURE_MSG);
 			fflush(NULL);
+			free(histMat);
 			return NULL;
 		}
 	}
@@ -143,6 +144,7 @@ double** spGetSiftDescriptors(char* str, int maxNFeautres, int *nFeatures){
 		if (feature_matrix[i] == NULL){
 			printf(ALLOCATION_FAILURE_MSG);
 			fflush(NULL);
+			free(feature_matrix);
 			return NULL;
 		}
 	}
@@ -150,7 +152,7 @@ double** spGetSiftDescriptors(char* str, int maxNFeautres, int *nFeatures){
 	//put the feature data in feature_matrix
 	for (i=0; i<FeatureValues.rows; i++){
 		for (j=0; j<FeatureValues.cols; j++){
-			feature_matrix[i][j]=(double)FeatureValues.at<float>(0,j);
+			feature_matrix[i][j]=(double)FeatureValues.at<float>(0,j); //TODO at(i,j)?
 		}
 	}
 
@@ -220,34 +222,33 @@ int* spBestSIFTL2SquaredDistance(int bestNFeatures, double* featureA,
 	
 	// return NULL if one of the parameters is not initialized
 	if (!featureA | !databaseFeatures | (numberOfImages <=1) | !nFeaturesPerImage) {
-			return NULL;
+		return NULL;
 	}
 
 	// find total amount of features (including all images)
 	for (image = 0; image < numberOfImages; image++) {
-		printf("-- %d \n",nFeaturesPerImage[image]);total_num_of_features = total_num_of_features+ nFeaturesPerImage[image];
+		total_num_of_features = total_num_of_features+ nFeaturesPerImage[image];
 	}
 
 	// allocate dynamic memory and return NULL if allocation fails
-printf("total %d\n",total_num_of_features);
 	if ((all_features_dist = (double**)malloc(total_num_of_features*sizeof(double*))) == NULL) {
-		printf("1\n");printf(ALLOCATION_FAILURE_MSG);
-		printf("2\n");fflush(NULL);
+		printf(ALLOCATION_FAILURE_MSG);
+		fflush(NULL);
 		return NULL;
 	}
 
 	for (feature = 0; feature < total_num_of_features; feature++){
 		if ((all_features_dist[feature] = (double *)malloc(2*sizeof(double))) == NULL ) {
 			printf(ALLOCATION_FAILURE_MSG);
-			printf("333\n");
-fflush(NULL);
+			fflush(NULL);
+			free(all_features_dist);
 			return NULL;
 		}
 	}
 
 	if ((best_n_features_images = (int *)malloc(bestNFeatures*sizeof(int))) == NULL ){
 		printf(ALLOCATION_FAILURE_MSG);
-printf("4444\n");
+		free(all_features_dist);
 		fflush(NULL);
 		return NULL;
 	}
