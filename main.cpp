@@ -21,21 +21,11 @@
 #define  MAX_STR_SIZE 1024	
 #define SUCCESS 0
 #define FAILURE 1
+#define BEST_FEATURES_COUNT 5
 
 int main()
 	{
-
-
-	// char dir[10] = "./images/";
-	// char prefix[4] = "img";
- //        char suffix[5] =".png";
- //        char queries[5][11]={"queryA.png","queryB.png","queryC.png","queryD.png", "#"};
- //        int m = 0;;//TODO remove
- //        char *query;//[11];
-
-// int number_of_images = 17;
-// int number_of_bins = 16;
-// int max_number_of_features = 100;
+	// user input params
 	char dir[MAX_STR_SIZE];
 	char prefix[MAX_STR_SIZE];
 	char suffix[MAX_STR_SIZE];
@@ -43,10 +33,9 @@ int main()
 	int number_of_images;
 	int number_of_bins;
 	int max_number_of_features;
-	int i; int j; int k;
-	int best_n_features = 5;
-	char image_full_path[MAX_STR_SIZE];
-	int actual_num_of_features = 0;
+	
+	char image_full_path[MAX_STR_SIZE];				// full path to image
+	int actual_num_of_features = 0;					// number of features per img
 	int*** RGB_hist_per_image;                       // array of pointers to the RGB histogram of each image
 	double*** SIFT_descriptors_per_image;            // array of pointers to the sift descriptors of each image
 	int** RGB_hist_of_query;                         // the RGB histogram of the query image
@@ -59,7 +48,9 @@ int main()
 	int * num_of_features_per_image;                 // holds the number of features each image has
 
 	int error = SUCCESS; // indicates whether an error occurred inside while loop
+	int i; int j; int k;
 
+	// get input from user
 	printf(ENTER_IMAGES_DIR_MSG);
 	fflush(NULL);
 	if (scanf("%s",dir) == 0){
@@ -130,7 +121,7 @@ int main()
 	}
 
 	// allocate memory for num_of_features_per_image
-	 num_of_features_per_image = (int *)malloc(number_of_images*sizeof(int)); //TODO
+	num_of_features_per_image = (int *)malloc(number_of_images*sizeof(int));
     if (num_of_features_per_image == NULL) { 
         free(RGB_hist_per_image);
         free(SIFT_descriptors_per_image);
@@ -158,17 +149,18 @@ int main()
 		}
 	}
 
+	// run while there was no error and while user didn't ask to exit
 	while (!error){
+
 		printf(ENTER_QUERY_IMG_MSG);
 		fflush(NULL);
-		// TODO: what happens here?
 		if (scanf("%s",query) == 0){
 			free(RGB_hist_per_image);
 			free(SIFT_descriptors_per_image);
 			return FAILURE;
 		}
 		
-		// the user requested termination
+		// the user requested to exit
 		if (strcmp (query,EXIT_QUERY) == 0) {
 			printf(EXIT_MSG);
 			fflush(NULL);
@@ -178,7 +170,7 @@ int main()
 		//calculate the RGB histogram and sift descriptors of the query image
 		RGB_hist_of_query = spGetRGBHist(query, number_of_bins);
 		sift_descriptors_of_query = spGetSiftDescriptors(query, max_number_of_features, &actual_num_of_features);
-		error =  (sift_descriptors_of_query == NULL || RGB_hist_of_query == NULL);
+		error = (sift_descriptors_of_query == NULL || RGB_hist_of_query == NULL);
 		if (error) {
 			break;
 		}
@@ -200,7 +192,7 @@ int main()
 		}
 
 		// find the nearest images using global and report to user
-		nearest_images_global = nearestImages(arr_of_RGB_distances, number_of_images, best_n_features);
+		nearest_images_global = nearestImages(arr_of_RGB_distances, number_of_images, BEST_FEATURES_COUNT);
 		error = (nearest_images_global == NULL);
 		if (error) {
 			break;
@@ -223,7 +215,7 @@ int main()
 
 		// for each feature of query calculate the spBestSIFTL2SquaredDistance
 		for (i=0; i<actual_num_of_features; i++){
-			feature_square_distance_result = spBestSIFTL2SquaredDistance(best_n_features, sift_descriptors_of_query[i],
+			feature_square_distance_result = spBestSIFTL2SquaredDistance(BEST_FEATURES_COUNT, sift_descriptors_of_query[i],
 				SIFT_descriptors_per_image, number_of_images, num_of_features_per_image);
 
 			error = (feature_square_distance_result == NULL);
@@ -241,7 +233,7 @@ int main()
 		}
 
 		// find the nearest images using local and report to user
-		nearest_images_local = nearestImages(mach_feature_cnt, number_of_images, best_n_features);
+		nearest_images_local = nearestImages(mach_feature_cnt, number_of_images, BEST_FEATURES_COUNT);
 		error = (nearest_images_local == NULL);
 		if (error) {
 			break;

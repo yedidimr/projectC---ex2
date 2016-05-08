@@ -13,8 +13,8 @@
 #define ONE_RGB_CHANNEL_PERCENTAGE 0.33 // one channel from RGB_CHANNELS (percentage)
 #define R_INDEX 0 // R channel index
 #define G_INDEX 1 // G channel index
-#define B_INDEX 2 // B channel index //TODO is it 0?- this is ok, it changes
-#define HIST_BINS 128 // TODO change name? elisheva:  yes, what about feature length?
+#define B_INDEX 2 // B channel index
+#define FEATURE_LEN 128
 #define ALLOCATION_FAILURE_MSG "An error occurred - allocation failure\n"
 #define DOUBLE_ERROR_VALUE (-1)
 
@@ -46,7 +46,7 @@ int** spGetRGBHist(char* str, int nBins){
 	split(image, rgb_planes);
 
 	// calculate the histograms for each color, the results are stored in b_hist, g_hist, r_hist, output type of the matrices is CV_32F (float)
-	calcHist( &rgb_planes[0], 1, 0, Mat(), b_hist, 1, &nBins, &histRange);// TODO should use B_INDEX. elisheva: should stay like this because in rgb_planes it seperates in this order bgr, but then we switched to rgb because they asked in the assighnment
+	calcHist( &rgb_planes[0], 1, 0, Mat(), b_hist, 1, &nBins, &histRange);
 	calcHist( &rgb_planes[1], 1, 0, Mat(), g_hist, 1, &nBins, &histRange);
 	calcHist( &rgb_planes[2], 1, 0, Mat(), r_hist, 1, &nBins, &histRange); 
 
@@ -138,7 +138,7 @@ double** spGetSiftDescriptors(char* str, int maxNFeautres, int *nFeatures){
 		return NULL;
 	}
 	for (i = 0; i < *nFeatures; i++){
-		feature_matrix[i] = (double *) malloc(HIST_BINS * sizeof(double));
+		feature_matrix[i] = (double *) malloc(FEATURE_LEN * sizeof(double));
 		if (feature_matrix[i] == NULL){
 			printf(ALLOCATION_FAILURE_MSG);
 			fflush(NULL);
@@ -148,17 +148,10 @@ double** spGetSiftDescriptors(char* str, int maxNFeautres, int *nFeatures){
 			free(feature_matrix);
 			return NULL;
 		}
-		for (j=0; j<HIST_BINS; j++){
-            feature_matrix[i][j] = FeatureValues.at<float>(i,j); //TODO: add cast to double?
+		for (j=0; j<FEATURE_LEN; j++){
+            feature_matrix[i][j] = (double)FeatureValues.at<float>(i,j);
         }
 	}
-
-	// //put the feature data in feature_matrix
-	// for (i=0; i<FeatureValues.rows; i++){
-	// 	for (j=0; j<FeatureValues.cols; j++){
-	// 		feature_matrix[i][j]=(double)FeatureValues.at<float>(0,j); //TODO at(i,j)? elisheva:all this can be removed?
-	// 	}
-
 
 	return feature_matrix;
 }
@@ -175,7 +168,7 @@ double spL2SquaredDistance(double* featureA, double* featureB){
 	}
 
 	// calculate distance
-	for (i = 0; i < HIST_BINS; i++) {
+	for (i = 0; i < FEATURE_LEN; i++) {
 		pair_dist = featureA[i] - featureB[i];
 		total_dist += pair_dist * pair_dist;
 	}
