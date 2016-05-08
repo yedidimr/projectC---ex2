@@ -16,6 +16,7 @@
 #define B_INDEX 2 // B channel index //TODO is it 0?
 #define HIST_BINS 128 // TODO change name?
 #define ALLOCATION_FAILURE_MSG "An error occurred - allocation failure\n"
+#define DOUBLE_ERROR_VALUE (-1)
 
 using namespace cv;
 using namespace std;
@@ -28,15 +29,18 @@ int** spGetRGBHist(char* str, int nBins){
 	Mat r_hist, g_hist, b_hist;
 	Mat image;
 	int i;
+	int j;
 	vector<Mat> rgb_planes;
 
 	// input validation
-	if ((str==NULL) | (nBins<=0)){
+	if ((str==NULL) || (nBins<=0)){
 		return NULL;
 	}
-
 	// load image and make sure it exists
 	image = imread(str, CV_LOAD_IMAGE_COLOR);
+	if (image.empty()){
+        return NULL;
+	}
 
 	// split the image to the three planes (red,green,blue)
 	split(image, rgb_planes);
@@ -58,6 +62,9 @@ int** spGetRGBHist(char* str, int nBins){
 		if (histMat[i] == NULL) {
 			printf(ALLOCATION_FAILURE_MSG);
 			fflush(NULL);
+			for (j=0;j<i;j++){
+                free(histMat[j]);
+            }
 			free(histMat);
 			return NULL;
 		}
@@ -66,12 +73,8 @@ int** spGetRGBHist(char* str, int nBins){
 	//put the data from the three Mat type histograms into one 2D array
 	for (i = 0; i < nBins; i++){
 		histMat[R_INDEX][i] = (int)r_hist.at<float>(i);
-	}
-	for (i = 0; i < nBins; i++){
-			histMat[G_INDEX][i] = (int)g_hist.at<float>(i);
-	}
-	for (i = 0; i < nBins; i++){
-			histMat[B_INDEX][i] = (int)b_hist.at<float>(i);
+		histMat[G_INDEX][i] = (int)g_hist.at<float>(i);
+		histMat[B_INDEX][i] = (int)b_hist.at<float>(i);
 	}
 
 	return histMat;
@@ -84,9 +87,9 @@ double spRGBHistL2Distance(int** histA, int** histB, int nBins) {
 	double total_dist = 0; // distance between histA and histB
 	int r,c;
 
-	//return -1 if nBins <= 0 or histA/histB is null
-	if ((nBins <= 0) | !histB | !histA) {
-		return -1;
+	//return DOUBLE_ERROR_VALUE if nBins <= 0 or histA/histB is null
+	if ((nBins <= 0) || !histB || !histA) {
+		return DOUBLE_ERROR_VALUE;
 	}
 
 	// calculate distance
@@ -101,7 +104,6 @@ double spRGBHistL2Distance(int** histA, int** histB, int nBins) {
 	return total_dist;
 }
 
-
 double** spGetSiftDescriptors(char* str, int maxNFeautres, int *nFeatures){
 	double** feature_matrix;              					// the array that will be the output
 	std::vector<cv::KeyPoint> keyPoints;  					//Key points will be stored in keyPoints;
@@ -111,7 +113,7 @@ double** spGetSiftDescriptors(char* str, int maxNFeautres, int *nFeatures){
 	cv::Ptr<cv::xfeatures2d::SiftDescriptorExtractor> detect = cv::xfeatures2d::SIFT::create(maxNFeautres); //Creating  a Sift Descriptor extractor
 
 	//input validation
-	if ((str==NULL) | (nFeatures==NULL) | (maxNFeautres <= 0)){
+	if ((str==NULL) || (nFeatures==NULL) || (maxNFeautres <= 0)){
 		return NULL;
 	}
 
@@ -140,17 +142,23 @@ double** spGetSiftDescriptors(char* str, int maxNFeautres, int *nFeatures){
 		if (feature_matrix[i] == NULL){
 			printf(ALLOCATION_FAILURE_MSG);
 			fflush(NULL);
+			for (j=0;j<i;j++){
+                free(feature_matrix[j]);
+            }
 			free(feature_matrix);
 			return NULL;
 		}
+		for (j=0; j<HIST_BINS; j++){
+            feature_matrix[i][j] = FeatureValues.at<float>(i,j);
+        }
 	}
 
-	//put the feature data in feature_matrix
-	for (i=0; i<FeatureValues.rows; i++){
-		for (j=0; j<FeatureValues.cols; j++){
-			feature_matrix[i][j]=(double)FeatureValues.at<float>(0,j); //TODO at(i,j)?
-		}
-	}
+	// //put the feature data in feature_matrix
+	// for (i=0; i<FeatureValues.rows; i++){
+	// 	for (j=0; j<FeatureValues.cols; j++){
+	// 		feature_matrix[i][j]=(double)FeatureValues.at<float>(0,j); //TODO at(i,j)?
+	// 	}
+
 
 	return feature_matrix;
 }
@@ -162,8 +170,8 @@ double spL2SquaredDistance(double* featureA, double* featureB){
 	int i;
 
 	//return -1 in case featureA or featureB is NULL
-	if (!featureB | !featureA) {
-		return -1;
+	if (!featureB || !featureA) {
+		return DOUBLE_ERROR_VALUE;
 	}
 
 	// calculate distance
@@ -234,13 +242,13 @@ int* spBestSIFTL2SquaredDistance(int bestNFeatures, double* featureA,
 	int * best_n_features_images;   // will hold bestNFeatures images indexes
 	
 	// return NULL if one of the parameters is not initialized
-	if (!featureA | !databaseFeatures | (numberOfImages <=1) | !nFeaturesPerImage) {
+	if (!featureA || !databaseFeatures || (numberOfImages <=1) || !nFeaturesPerImage) {
 		return NULL;
 	}
 
 	// find total amount of features (including all images)
 	for (image = 0; image < numberOfImages; image++) {
-		total_num_of_features = total_num_of_features+ nFeaturesPerImage[image];
+		total_num_of_features += nFeaturesPerImage[image];
 	}
 
 	// allocate dynamic memory and return NULL if allocation fails

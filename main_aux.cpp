@@ -13,6 +13,7 @@ int* nearestImages (double* arr, int size, int nearestNImages){
 	double** arr_with_indixes;	// doc above
 	int* first_minimums; 		// the nearestNImages indexes that are the minimum values
 	int i;
+	int j;
 
 	// if asked to find miminums more than the values in the array, return NULL
 	if (nearestNImages > size) {
@@ -38,6 +39,9 @@ int* nearestImages (double* arr, int size, int nearestNImages){
 		if ((arr_with_indixes[i] = (double *)malloc(2*sizeof(double))) == NULL ) {
 			printf(ALLOCATION_FAILURE_MSG);
 			free(first_minimums);
+			for (j=0;j<i;j++){
+                free(arr_with_indixes[j]);
+            }
 			free(arr_with_indixes);
 			fflush(NULL);
 			return NULL;
