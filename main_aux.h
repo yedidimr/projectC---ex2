@@ -13,4 +13,4 @@ int* nearestImages (double* arr, int size, int nearestNImages);
 * @param arr - array to find the maximum of
 * @param size - the size of array arr
 */
-int compare(const void *a, const void * b) ;
+int compare(const void *a, const void * b) ;//TODO: not sure where this should be mentioned - asked in forum.

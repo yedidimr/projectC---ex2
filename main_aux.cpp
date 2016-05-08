@@ -68,17 +68,7 @@ int* nearestImages (double* arr, int size, int nearestNImages){
 
 
 
-double max_of_array (double* arr, int size){
-	double max = arr[0]; //default max val
-	int i;
-	//loop through arr to find max
-	for (i=0; i<size; i++){
-		if (arr[i]>max){
-			max = arr[i];
-		}
-	}
-	return 	max;
-}
+
 
 
 
