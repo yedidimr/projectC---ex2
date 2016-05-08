@@ -13,10 +13,9 @@
 #define ONE_RGB_CHANNEL_PERCENTAGE 0.33 // one channel from RGB_CHANNELS (percentage)
 #define R_INDEX 0 // R channel index
 #define G_INDEX 1 // G channel index
-#define B_INDEX 2 // B channel index
+#define B_INDEX 2 // B channel index //TODO is it 0?
+#define HIST_BINS 128 // TODO change name?
 #define ALLOCATION_FAILURE_MSG "An error occurred - allocation failure\n"
-
-#define HIST_BINS 128 // TODO change name
 
 using namespace cv;
 using namespace std;
@@ -38,17 +37,14 @@ int** spGetRGBHist(char* str, int nBins){
 
 	// load image and make sure it exists
 	image = imread(str, CV_LOAD_IMAGE_COLOR);
-	if (image.empty()) { 			// if the image doesn't exist TODO is this needed? - REUT:  I think that if they didn't say to validate this it is not required, we can check in ,Elisheva:in the .h file it says to check this for the second func but to to this func.
-			return NULL;
-	}
 
 	// split the image to the three planes (red,green,blue)
 	split(image, rgb_planes);
 
 	// calculate the histograms for each color, the results are stored in b_hist, g_hist, r_hist, output type of the matrices is CV_32F (float)
-	calcHist( &rgb_planes[0], 1, 0, Mat(), b_hist, 1, &nBins, &histRange);
+	calcHist( &rgb_planes[0], 1, 0, Mat(), b_hist, 1, &nBins, &histRange);// TODO should use B_INDEX
 	calcHist( &rgb_planes[1], 1, 0, Mat(), g_hist, 1, &nBins, &histRange);
-	calcHist( &rgb_planes[2], 1, 0, Mat(), r_hist, 1, &nBins, &histRange);
+	calcHist( &rgb_planes[2], 1, 0, Mat(), r_hist, 1, &nBins, &histRange); 
 
 	// allocate memory for the array hisMat
 	histMat = (int**) malloc(RGB_CHANNELS * sizeof(int*));
@@ -179,7 +175,24 @@ double spL2SquaredDistance(double* featureA, double* featureB){
 }
 
 
-//TODO add description of this helper function
+/*
+* this function is called from qsort and it sorts array which each cell contains array of length two
+* this function sorts in ascending order by the first element of each cell.
+* if two elements are equal it sorts by the second element of each cell.
+*
+* this function is useful to sort array of doubles by ascending order, in case there are two elements
+* that are equal, then the one with the smallest index will be the smaller one.
+* to do so create a new array where it's first row is your original array and it's second row is the indexes of each element
+* and sort it with this function.
+*
+* @param a - array of doubles of size two.
+* @param b - array of doubles of size two.
+* @return 1 if a is bigger than b
+*		  -1 if b is bigger than a
+*		  0 if a is equal to be (both the first and second elelments)
+*
+
+*/
 int compare(const void *a, const void * b) {
 	double* p1 = *(double**) a;
 	double* p2 = *(double**) b;
@@ -266,12 +279,6 @@ int* spBestSIFTL2SquaredDistance(int bestNFeatures, double* featureA,
 		}
 	}
 	// now feature_counter is equal to total_num_of_features
-	if (feature_counter != total_num_of_features) //TODO REUT - remove before submission
-	{
-		printf("REUT FAIL %d %d", feature_counter, total_num_of_features);
-		fflush(NULL);
-		return NULL;		
-	}
 
 	// sort by distances (from lowest to highest) and keep images indexes sorted too
 	qsort(all_features_dist, total_num_of_features, sizeof(double*), compare);

@@ -1,7 +1,6 @@
 #ifndef SP_IMAGE_PROC_UTIL_H_
 #define SP_IMAGE_PROC_UTIL_H_
 
-
 /*
  * Calculates the RGB channels histogram. The histogram will be stored in a
  * two dimensional array of dimensions 3XnBins . The first row is the

@@ -3,9 +3,21 @@
 #include <stdio.h>
 #include "sp_image_proc_util.h"
 #include "main_aux.h"
-#define EXIT_MSG "Exiting...\n"
 #define ALLOCATION_FAILURE_MSG "An error occurred - allocation failure\n"
-
+#define ENTER_IMAGES_DIR_MSG "Enter images directory path:\n"
+#define INVALID_IMG_NUM_MSG "An error occurred - invalid number of images\n"
+#define ENTER_IMG_PREFIX_MSG "Enter images prefix:\n"
+#define ENTER_IMG_NUM_MSG "Enter number of images:\n"
+#define ENTER_IMG_SUFFIX_MSG "Enter images suffix:\n"
+#define ENTER_NUM_OF_BINS_MSG "Enter number of bins:\n"
+#define INVALID_NUM_OF_BIN_ERR_MSG "An error occurred - invalid number of bins\n"
+#define ENTER_NUM_OF_FEATURES_MSG "Enter number of features:\n"
+#define INVALID_NUM_OF_FEATURES_MSG "An error occurred - invalid number of features\n"
+#define NEAREST_GLOBAL_IMG_MSG "Nearest images using global descriptors:\n"
+#define NEAREST_LOCAL_IMG_MSG  "Nearest images using local descriptors:\n"
+#define EXIT_MSG "Exiting...\n"
+#define EXIT_QUERY "#"
+		
 int main()
 	{
 
@@ -38,49 +50,48 @@ int max_number_of_features = 100;
 	int nFeaturesOfQuery;
 
 /*
-	printf("Enter images directory path:\n");
+	printf(ENTER_IMAGES_DIR_MSG);
 	fflush(NULL);
 	if (scanf("%s",dir) == 0){
 		return 1;
 	}
 
 	fflush(NULL);
-	printf("Enter images prefix:\n");
+	printf(ENTER_IMG_PREFIX_MSG);
 	fflush(NULL);
 	if (scanf("%s",prefix) == 0){
 		return 1;
 	}
 
-	printf("Enter number of images:\n");
+	printf(ENTER_IMG_NUM_MSG);
 	fflush(NULL);
 	if (scanf("%d",&number_of_images) == 0){
 		return 1;
 	}
 	if (number_of_images < 1) {
-		printf("An error occurred - invalid number of images\n");
+		printf(INVALID_IMG_NUM_MSG);
 		fflush(NULL);
 		return 1;
 	}
 
-	printf("Enter images suffix:\n");
+	printf(ENTER_IMG_SUFFIX_MSG);
 	fflush(NULL);
 	if (scanf("%s", suffix) == 0){
 		return 1;
 	}
 
-	printf("Enter number of bins:\n");
+	printf(ENTER_NUM_OF_BINS_MSG);
 	fflush(NULL);
 	if (scanf("%d", &number_of_bins) == 0){
 		return 1;
 	}
 
 	if (number_of_bins < 1){
-		printf("An error occurred - invalid number of bins\n");
+		printf(INVALID_NUM_OF_BIN_ERR_MSG);
 		fflush(NULL);
 		return 1;
 	}
-
-	printf("Enter number of features:\n");
+	printf(ENTER_NUM_OF_FEATURES_MSG);
 	fflush(NULL);
 	if (scanf("%d", &max_number_of_features) == 0){
 		return 1;
@@ -88,7 +99,7 @@ int max_number_of_features = 100;
 	fflush(NULL);
 
 	if (max_number_of_features < 1){
-		printf("An error occurred - invalid number of features\n");
+		printf(INVALID_NUM_OF_FEATURES_MSG);
 		fflush(NULL);
 		return 1;
 	}
@@ -134,7 +145,8 @@ int max_number_of_features = 100;
 		
 		query = queries[k];
 		/*
-		printf("Enter a query image or # to terminate:\n");
+		ENTER_QUERY_IMG_MSG "Enter a query image or # to terminate:\n"
+		printf(ENTER_QUERY_IMG_MSG);
 		fflush(NULL);
 		// TODO: what happens here?
 		if (scanf("%s",query) == 0){
@@ -145,7 +157,7 @@ int max_number_of_features = 100;
 		}
 		*/
 		// the user requested termination
-		if (strcmp (query,"#") == 0) {
+		if (strcmp (query,EXIT_QUERY) == 0) {
 			printf(EXIT_MSG);
 			fflush(NULL);
 			free(RGB_hist_per_image);
@@ -161,7 +173,7 @@ int max_number_of_features = 100;
 		sift_descriptors_of_query = spGetSiftDescriptors(query, max_number_of_features, &actual_num_of_features);
 
 		// count the number of features of query image
-		nFeaturesOfQuery = sizeof sift_descriptors_of_query / sizeof sift_descriptors_of_query[0]; // TODO ??? sizeof() and not sizeof . we know the size.
+		nFeaturesOfQuery = sizeof(sift_descriptors_of_query)/sizeof(sift_descriptors_of_query[0]);
 
 		//allocate memory for arr_of_RGB_distances
 
@@ -184,14 +196,14 @@ int max_number_of_features = 100;
 
 		// find the nearest images using global and report to user
 		nearest_images_global = nearestImages(arr_of_RGB_distances, number_of_images, best_n_features);
-		printf("Nearest images using global descriptors:\n");
+		printf(NEAREST_GLOBAL_IMG_MSG);
 		printf("%d, %d, %d, %d, %d\n", nearest_images_global[0],nearest_images_global[1],nearest_images_global[2],nearest_images_global[3],nearest_images_global[4]);
 		fflush(NULL);
 		
 		// allocate memory for mach_feature_cnt and set all cells to zero because were using this array as a counter array
-		mach_feature_cnt = (double*)calloc(number_of_images, sizeof(double)); //TODO should allocate BEST_N_FEATURES *max_number_of_features and not number_of_images
+		mach_feature_cnt = (double*)calloc(number_of_images, sizeof(double));
 		if (mach_feature_cnt==NULL){
-			printf("An error occurred - allocation failure\n"); //TODO: switch to ALLOCATION_FAILURE_MSG
+			printf(ALLOCATION_FAILURE_MSG);
 			fflush(NULL);
 			free(RGB_hist_per_image);
 			free(SIFT_descriptors_per_image);
@@ -216,7 +228,8 @@ int max_number_of_features = 100;
 
 		// find the nearest images using local and report to user
 		nearest_images_local = nearestImages(mach_feature_cnt, number_of_images, best_n_features);
-		printf("Nearest images using local descriptors:\n");
+		printf(NEAREST_LOCAL_IMG_MSG);
+
 		printf("%d, %d, %d, %d, %d\n", nearest_images_local[0],nearest_images_local[1], nearest_images_local[2],nearest_images_local[3], nearest_images_local[4]);
 		fflush(NULL);
 

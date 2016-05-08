@@ -1,34 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "main_aux.h"
-/*
-// TODO use same function and add doc
-int compare(const void *a, const void * b) {
-	double* p1 = *(double**) a;
-	double* p2 = *(double**) b;
-	
-	if (p1[0] > p2[0]) {
-		return 1;
-	}
 
-	else if (p1[0] < p2[0]) {
-		return -1;
-	}
+#define ALLOCATION_FAILURE_MSG "An error occurred - allocation failure\n"
 
-	else { // p1[0] == p2[0]
-		if (p1[1] > p2[1]) {
-			return 1;
-		}
-
-		else if (p1[1] < p2[1]) {
-			return -1;
-		}
-		else {
-			return 0;
-		}
-	}
-
-}*/
 int* nearestImages (double* arr, int size, int nearestNImages){
 	/*
 	* in order to return lowest nearestNImages numbers from arr, this function sorts arr using qsort and keeping indexes order
@@ -47,13 +22,13 @@ int* nearestImages (double* arr, int size, int nearestNImages){
 	// allocate array of minimums (size of nearestNImages)
 	first_minimums = (int*) malloc(nearestNImages*sizeof(int));
 	if (first_minimums == NULL){
-		printf("An error occurred - allocation failure\n"); // TODO use define
+		printf(ALLOCATION_FAILURE_MSG);
 		fflush(NULL);
 		return NULL;
 	}
 
 	if ((arr_with_indixes = (double**)malloc(size*sizeof(double*))) == NULL) {
-		printf("An error occurred - allocation failure\n");
+		printf(ALLOCATION_FAILURE_MSG);
 		free(first_minimums);
 		fflush(NULL);
 		return NULL;
@@ -61,7 +36,7 @@ int* nearestImages (double* arr, int size, int nearestNImages){
 
 	for (i = 0; i < size; i++){
 		if ((arr_with_indixes[i] = (double *)malloc(2*sizeof(double))) == NULL ) {
-			printf("An error occurred - allocation failure\n");
+			printf(ALLOCATION_FAILURE_MSG);
 			free(first_minimums);
 			free(arr_with_indixes);
 			fflush(NULL);
